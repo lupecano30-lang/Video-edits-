@@ -3,145 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fitness Pro All-In-One</title>
+    <title>Pulse Monitor</title>
     <style>
-        :root { --bg: #0b0e14; --card: #1c222d; --blue: #4facfe; --text: #ffffff; --grey: #8e8e93; --green: #34c759; --red: #ff3b30; --orange: #ffcc00; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+        :root { --bg: #050505; --card: #121212; --neon-blue: #00f2ff; --neon-pink: #ff007f; --text: #ffffff; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        /* Pages & Visibility */
-        .page { display: none; min-height: 100vh; flex-direction: column; padding: 20px; box-sizing: border-box; }
-        .active-page { display: flex; }
+        .header { width: 100%; padding: 40px 20px 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; }
+        .back-btn { font-size: 24px; color: var(--text); text-decoration: none; }
+
+        /* The Big Pulse Circle */
+        .pulse-container { position: relative; width: 280px; height: 280px; margin: 40px 0; display: flex; align-items: center; justify-content: center; }
+        .outer-ring { position: absolute; width: 100%; height: 100%; border: 2px solid #222; border-radius: 50%; }
+        .glow { position: absolute; width: 200px; height: 200px; background: radial-gradient(circle, rgba(0,242,255,0.2) 0%, transparent 70%); border-radius: 50%; animation: pulse-glow 1.5s infinite; }
         
-        /* Onboarding Styles */
-        .option-card { background: var(--card); border: 2px solid transparent; border-radius: 15px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .option-card.selected { border-color: var(--blue); background: #242c3d; }
-        .diet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .diet-card { background: var(--card); border-radius: 15px; overflow: hidden; border: 2px solid transparent; }
-        .diet-card img { width: 100%; height: 80px; object-fit: cover; }
-        .diet-card.selected { border-color: var(--blue); }
+        .bpm-display { text-align: center; z-index: 10; }
+        .bpm-value { font-size: 80px; font-weight: 800; color: var(--neon-blue); text-shadow: 0 0 20px rgba(0,242,255,0.5); }
+        .bpm-unit { font-size: 18px; color: var(--grey); letter-spacing: 2px; }
 
-        /* Dashboard Styles */
-        .main-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
-        .cal-num { font-size: 32px; font-weight: 800; }
-        .bar-bg { background: #2d3446; height: 8px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
-        .bar-fill { height: 100%; width: 0%; transition: width 0.5s ease; }
-        .diary-row { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        /* Instructions */
+        .status-card { background: var(--card); width: 90%; border-radius: 20px; padding: 25px; box-sizing: border-box; border: 1px solid #222; text-align: center; }
+        .instruction { color: #888; font-size: 14px; line-height: 1.6; }
 
-        /* Camera View */
-        .camera-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; }
-        #video-stream { width: 100%; height: 100%; object-fit: cover; }
+        /* Start Button */
+        .measure-btn { margin-top: auto; margin-bottom: 50px; width: 80%; background: linear-gradient(90deg, var(--neon-blue), #7000ff); padding: 18px; border-radius: 40px; border: none; color: white; font-weight: 700; font-size: 18px; box-shadow: 0 10px 20px rgba(0,242,255,0.3); }
 
-        /* Navigation */
-        .nav { position: fixed; bottom: 0; width: 100%; background: #161b2a; display: none; justify-content: space-around; padding: 15px 0 35px 0; border-top: 1px solid #2d3446; z-index: 500; }
-        .plus-btn { background: var(--blue); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-top: -40px; border: 5px solid var(--bg); }
-        .btn-next { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 30px; font-weight: 700; margin-top: auto; }
+        /* Waveform Animation */
+        .wave-box { width: 100%; height: 60px; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .bar { width: 4px; height: 10px; background: var(--neon-blue); border-radius: 2px; animation: wave 1s infinite; }
+
+        @keyframes pulse-glow { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.2; } 100% { transform: scale(0.8); opacity: 0.5; } }
+        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 40px; } }
     </style>
 </head>
 <body>
 
-    <div id="setup1" class="page active-page">
-        <h2>How motivated are you?</h2>
-        <div class="option-card" onclick="select(this, 'setup')"><strong>Ready to tackle anything</strong><div class="dot"></div></div>
-        <div class="option-card" onclick="select(this, 'setup')"><strong>Willing to give it a go</strong><div class="dot"></div></div>
-        <button class="btn-next" onclick="goTo('setup2')">Continue</button>
+    <div class="header">
+        <a href="#" class="back-btn">✕</a>
+        <h3 style="margin:0; font-weight:400; letter-spacing:1px;">HEART RATE</h3>
+        <div style="width:24px;"></div>
     </div>
 
-    <div id="setup2" class="page">
-        <h2>Choose your diet</h2>
-        <div class="diet-grid">
-            <div class="diet-card" onclick="select(this, 'diet')"><img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=200"><div style="padding:10px">Balanced</div></div>
-            <div class="diet-card" onclick="select(this, 'diet')"><img src="https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=200"><div style="padding:10px">High Protein</div></div>
+    <div class="pulse-container">
+        <div class="outer-ring"></div>
+        <div class="glow" id="glowAnim" style="display:none;"></div>
+        <div class="bpm-display">
+            <span class="bpm-value" id="bpmVal">--</span><br>
+            <span class="bpm-unit">BPM</span>
         </div>
-        <button class="btn-next" onclick="finishSetup()">Finish Setup</button>
     </div>
 
-    <div id="dash" class="page">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h1>Today ▾</h1>
-            <button onclick="goTo('goals')" style="background:none; border:none; color:var(--blue);">Set Goals</button>
+    <div class="status-card">
+        <p class="instruction" id="statusMsg">Place your finger over the <b>back camera</b> and <b>flash</b> to start measuring.</p>
+        <div class="wave-box">
+            <div class="bar" style="animation-delay: 0.1s"></div>
+            <div class="bar" style="animation-delay: 0.2s"></div>
+            <div class="bar" style="animation-delay: 0.3s"></div>
+            <div class="bar" style="animation-delay: 0.4s"></div>
+            <div class="bar" style="animation-delay: 0.5s"></div>
         </div>
-        <div class="main-card">
-            <div style="display:flex; justify-content:space-between;">
-                <div><small>Eaten</small><br><span class="cal-num" id="eaten">0</span></div>
-                <div style="text-align:right;"><small>Left</small><br><span class="cal-num" id="left" style="color:var(--blue)">2000</span></div>
-            </div>
-            <div class="bar-bg"><div id="mainFill" class="bar-fill" style="background:var(--blue)"></div></div>
-        </div>
-        <h3>Diary</h3>
-        <div class="diary-row"><span>🍳 Breakfast</span><button onclick="add(300)" style="color:var(--blue); background:none; border:none;">Log</button></div>
-        <div class="diary-row"><span>🍔 Lunch</span><button onclick="add(600)" style="color:var(--blue); background:none; border:none;">Log</button></div>
     </div>
 
-    <div id="goals" class="page">
-        <button onclick="goTo('dash')" style="color:var(--blue); border:none; background:none; margin-bottom:20px;">← Back</button>
-        <h2>My Goals</h2>
-        <div class="option-card"><span>Daily Calories</span><input type="number" id="goalInput" value="2000" oninput="updateGoal()" style="background:none; border:none; color:var(--blue); text-align:right; width:80px; font-size:18px;"></div>
-    </div>
+    <button class="measure-btn" onclick="startMeasure()">START MEASURING</button>
 
-    <div id="camView" class="camera-overlay">
-        <video id="video-stream" autoplay playsinline></video>
-        <button onclick="closeCam()" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.5); border:none; padding:10px; border-radius:10px;">✕ Close</button>
-        <div onclick="snap()" style="position:absolute; bottom:40px; left:50%; transform:translateX(-50%); width:70px; height:70px; border:5px solid white; border-radius:50%;"></div>
-    </div>
-
-    <div class="nav" id="mainNav">
-        <div onclick="goTo('dash')">🏠</div>
-        <div class="plus-btn" onclick="openCam()">+</div>
-        <div onclick="goTo('goals')">📊</div>
-    </div>
+    <video id="v" style="display:none;" playsinline></video>
 
     <script>
-        let logs = { eaten: 0, goal: 2000 };
+        let isMeasuring = false;
 
-        function select(el, group) {
-            const selector = group === 'diet' ? '.diet-card' : '.option-card';
-            document.querySelectorAll(selector).forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
+        async function startMeasure() {
+            if (isMeasuring) return;
+            isMeasuring = true;
+            
+            document.getElementById('statusMsg').innerHTML = "Hold steady... scanning blood flow";
+            document.getElementById('glowAnim').style.display = 'block';
+            
+            try {
+                // Request camera with Flash
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment', torch: true } 
+                });
+                
+                const video = document.getElementById('v');
+                video.srcObject = stream;
+
+                // Simulate pulse detection
+                let count = 0;
+                let interval = setInterval(() => {
+                    count++;
+                    // Randomize BPM between 68-75 for the demo
+                    let heartRate = Math.floor(Math.random() * (75 - 68 + 1)) + 68;
+                    document.getElementById('bpmVal').innerText = heartRate;
+
+                    if (count > 10) {
+                        clearInterval(interval);
+                        stopMeasure(stream);
+                    }
+                }, 1000);
+
+            } catch (err) {
+                alert("Please enable camera access and ensure your finger covers the lens.");
+                isMeasuring = false;
+            }
         }
 
-        function goTo(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-            document.getElementById(id).classList.add('active-page');
+        function stopMeasure(stream) {
+            isMeasuring = false;
+            document.getElementById('statusMsg').innerText = "Measurement Complete.";
+            document.getElementById('glowAnim').style.display = 'none';
+            stream.getTracks().forEach(t => t.stop());
         }
-
-        function finishSetup() {
-            document.getElementById('mainNav').style.display = 'flex';
-            goTo('dash');
-            localStorage.setItem('setupDone', 'true');
-        }
-
-        async function openCam() {
-            document.getElementById('camView').style.display = 'block';
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            document.getElementById('video-stream').srcObject = stream;
-        }
-
-        function closeCam() {
-            document.getElementById('camView').style.display = 'none';
-            const stream = document.getElementById('video-stream').srcObject;
-            if(stream) stream.getTracks().forEach(t => t.stop());
-        }
-
-        function snap() { alert("Food Scanned! +450 cal"); add(450); closeCam(); }
-
-        function add(amt) {
-            logs.eaten += amt;
-            updateUI();
-        }
-
-        function updateGoal() {
-            logs.goal = document.getElementById('goalInput').value;
-            updateUI();
-        }
-
-        function updateUI() {
-            document.getElementById('eaten').innerText = logs.eaten;
-            document.getElementById('left').innerText = Math.max(0, logs.goal - logs.eaten);
-            document.getElementById('mainFill').style.width = Math.min(100, (logs.eaten / logs.goal * 100)) + "%";
-        }
-
-        // Auto-skip setup if done before
-        if(localStorage.getItem('setupDone')) { finishSetup(); }
     </script>
 </body>
 </html>
