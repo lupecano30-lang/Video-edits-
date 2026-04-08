@@ -9,44 +9,49 @@
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; padding-bottom: 100px; }
         
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .main-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .main-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
         
-        /* Calorie Ring Area */
+        /* Calorie Display */
         .cal-display { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .cal-num { font-size: 36px; font-weight: 800; display: block; }
-        .label { color: var(--grey); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+        .cal-num { font-size: 32px; font-weight: 800; display: block; }
+        .label { color: var(--grey); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
 
         /* Macro Progress */
         .macros { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
         .bar-bg { background: #2d3446; height: 6px; border-radius: 3px; margin: 8px 0; overflow: hidden; }
         .bar-fill { height: 100%; transition: width 0.5s ease; }
 
-        /* Search UI */
+        /* Goal Settings Modal */
+        #settingsView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 200; padding: 20px; box-sizing: border-box; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+        .setting-row input { background: none; border: none; color: var(--blue); text-align: right; font-size: 18px; width: 80px; outline: none; }
+
+        /* Standard UI */
         #searchView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 100; padding: 20px; box-sizing: border-box; }
-        .search-bar { background: var(--card); border: none; padding: 15px; border-radius: 12px; width: 100%; color: white; font-size: 16px; margin-bottom: 20px; outline: none; }
         .food-item { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Footer */
         .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #161b2a; display: flex; justify-content: space-around; padding: 15px 0 35px 0; border-top: 0.5px solid #2d3446; }
-        .add-btn { background: var(--blue); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-top: -40px; border: 6px solid var(--bg); cursor: pointer; }
+        .add-btn { background: var(--blue); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-top: -40px; border: 6px solid var(--bg); }
     </style>
 </head>
 <body>
 
     <div id="mainView">
-        <div class="header"><h1>Today ▾</h1><div style="width:35px; height:35px; background:var(--grey); border-radius:50%;"></div></div>
+        <div class="header">
+            <h1>Today ▾</h1>
+            <button onclick="openSettings()" style="background:none; border:none; color:var(--blue); font-size:16px;">Set Goals</button>
+        </div>
 
         <div class="main-card">
             <div class="cal-display">
                 <div><span class="label">Eaten</span><span class="cal-num" id="eaten">0</span></div>
-                <div style="text-align:center;"><span class="label">Goal</span><span class="cal-num" style="color:var(--grey)">2130</span></div>
+                <div style="text-align:center;"><span class="label">Goal</span><span class="cal-num" id="goalVal" style="color:var(--grey)">2130</span></div>
                 <div style="text-align:right;"><span class="label">Left</span><span class="cal-num" id="left" style="color:var(--blue)">2130</span></div>
             </div>
             
             <div class="macros">
-                <div><span class="label">Carbs</span><div class="bar-bg"><div id="carbFill" class="bar-fill" style="width:0%; background:var(--orange)"></div></div><small id="carbTxt">0/266g</small></div>
-                <div><span class="label">Fat</span><div class="bar-bg"><div id="fatFill" class="bar-fill" style="width:0%; background:var(--red)"></div></div><small id="fatTxt">0/71g</small></div>
-                <div><span class="label">Protein</span><div class="bar-bg"><div id="protFill" class="bar-fill" style="width:0%; background:var(--green)"></div></div><small id="protTxt">0/106g</small></div>
+                <div><span class="label">Carbs</span><div class="bar-bg"><div id="carbFill" class="bar-fill" style="background:var(--orange)"></div></div><small id="carbTxt">0/266g</small></div>
+                <div><span class="label">Fat</span><div class="bar-bg"><div id="fatFill" class="bar-fill" style="background:var(--red)"></div></div><small id="fatTxt">0/71g</small></div>
+                <div><span class="label">Protein</span><div class="bar-bg"><div id="protFill" class="bar-fill" style="background:var(--green)"></div></div><small id="protTxt">0/106g</small></div>
             </div>
         </div>
 
@@ -54,9 +59,18 @@
         <div id="diaryList"></div>
     </div>
 
+    <div id="settingsView">
+        <h2>Custom Goals</h2>
+        <div class="setting-row"><span>Calories</span><input type="number" id="setCal" value="2130" onchange="updateGoals()"></div>
+        <div class="setting-row"><span>Carbs (g)</span><input type="number" id="setCarb" value="266" onchange="updateGoals()"></div>
+        <div class="setting-row"><span>Fat (g)</span><input type="number" id="setFat" value="71" onchange="updateGoals()"></div>
+        <div class="setting-row"><span>Protein (g)</span><input type="number" id="setProt" value="106" onchange="updateGoals()"></div>
+        <button class="add-btn" style="width:100%; margin-top:20px; border-radius:12px; height:50px; font-size:18px;" onclick="closeSettings()">Save Goals</button>
+    </div>
+
     <div id="searchView">
         <button onclick="closeSearch()" style="background:none; border:none; color:var(--blue); margin-bottom:10px;">✕ Close</button>
-        <input type="text" class="search-bar" placeholder="Search food..." oninput="searchFood(this.value)">
+        <input type="text" class="search-bar" style="width:100%; padding:15px; border-radius:10px; margin-bottom:20px;" placeholder="Search food..." oninput="searchFood(this.value)">
         <div id="searchResults"></div>
     </div>
 
@@ -67,26 +81,61 @@
     </div>
 
     <script>
-        // 1. DATABASE: The "Pictures" data
+        // Data & Goals
+        let logs = JSON.parse(localStorage.getItem('fitLogs')) || { eaten: 0, c: 0, f: 0, p: 0, items: [] };
+        let goals = JSON.parse(localStorage.getItem('fitGoals')) || { cal: 2130, c: 266, f: 71, p: 106 };
+
         const foodDb = [
             { name: "Coffee, black", cal: 2, c: 0, f: 0, p: 0.3 },
             { name: "Protein Shake", cal: 150, c: 5, f: 3, p: 30 },
             { name: "Olive Oil (1tbsp)", cal: 126, c: 0, f: 14, p: 0 },
-            { name: "Strawberry (0.5 cup)", cal: 24, c: 6, f: 0, p: 0.5 },
-            { name: "Bacon (2 pieces)", cal: 77, c: 0, f: 6, p: 5 },
-            { name: "Blueberries (1 cup)", cal: 84, c: 21, f: 0.5, p: 1 },
-            { name: "Peanut Butter (1tbsp)", cal: 94, c: 3, f: 8, p: 4 }
+            { name: "Bacon (2 pieces)", cal: 77, c: 0, f: 6, p: 5 }
         ];
 
-        let logs = JSON.parse(localStorage.getItem('fitLogs')) || { eaten: 0, c: 0, f: 0, p: 0, items: [] };
+        function openSettings() { document.getElementById('settingsView').style.display = 'block'; }
+        function closeSettings() { document.getElementById('settingsView').style.display = 'none'; }
+
+        function updateGoals() {
+            goals.cal = parseInt(document.getElementById('setCal').value);
+            goals.c = parseInt(document.getElementById('setCarb').value);
+            goals.f = parseInt(document.getElementById('setFat').value);
+            goals.p = parseInt(document.getElementById('setProt').value);
+            localStorage.setItem('fitGoals', JSON.stringify(goals));
+            updateUI();
+        }
 
         function openSearch() { document.getElementById('searchView').style.display = 'block'; }
         function closeSearch() { document.getElementById('searchView').style.display = 'none'; }
 
+        function logFood(name, cal, c, f, p) {
+            logs.eaten += cal; logs.c += c; logs.f += f; logs.p += p;
+            logs.items.push(name);
+            localStorage.setItem('fitLogs', JSON.stringify(logs));
+            closeSearch();
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('eaten').innerText = Math.round(logs.eaten);
+            document.getElementById('goalVal').innerText = goals.cal;
+            document.getElementById('left').innerText = Math.max(0, goals.cal - Math.round(logs.eaten));
+            
+            // Bars based on Custom Goals
+            document.getElementById('carbFill').style.width = Math.min(100, (logs.c / goals.c * 100)) + "%";
+            document.getElementById('fatFill').style.width = Math.min(100, (logs.f / goals.f * 100)) + "%";
+            document.getElementById('protFill').style.width = Math.min(100, (logs.p / goals.p * 100)) + "%";
+            
+            document.getElementById('carbTxt').innerText = `${Math.round(logs.c)}/${goals.c}g`;
+            document.getElementById('fatTxt').innerText = `${Math.round(logs.f)}/${goals.f}g`;
+            document.getElementById('protTxt').innerText = `${Math.round(logs.p)}/${goals.p}g`;
+
+            document.getElementById('diaryList').innerHTML = logs.items.map(i => `<div class="food-item">${i}</div>`).join('');
+        }
+
         function searchFood(query) {
-            const results = foodDb.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
             const container = document.getElementById('searchResults');
-            container.innerHTML = results.map(f => `
+            const filtered = foodDb.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
+            container.innerHTML = filtered.map(f => `
                 <div class="food-item">
                     <div><strong>${f.name}</strong><br><small>${f.cal} cal</small></div>
                     <button onclick="logFood('${f.name}', ${f.cal}, ${f.c}, ${f.f}, ${f.p})" style="background:var(--blue); border:none; color:white; border-radius:50%; width:30px; height:30px;">+</button>
@@ -94,38 +143,14 @@
             `).join('');
         }
 
-        function logFood(name, cal, c, f, p) {
-            logs.eaten += cal;
-            logs.c += c; logs.f += f; logs.p += p;
-            logs.items.push(name);
-            save();
-            closeSearch();
-        }
-
-        function save() {
-            localStorage.setItem('fitLogs', JSON.stringify(logs));
-            updateUI();
-        }
-
-        function updateUI() {
-            document.getElementById('eaten').innerText = Math.round(logs.eaten);
-            document.getElementById('left').innerText = Math.max(0, 2130 - Math.round(logs.eaten));
-            
-            // Update Bars
-            document.getElementById('carbFill').style.width = (logs.c / 266 * 100) + "%";
-            document.getElementById('fatFill').style.width = (logs.f / 71 * 100) + "%";
-            document.getElementById('protFill').style.width = (logs.p / 106 * 100) + "%";
-            
-            // Update Text
-            document.getElementById('carbTxt').innerText = `${Math.round(logs.c)}/266g`;
-            document.getElementById('fatTxt').innerText = `${Math.round(logs.f)}/71g`;
-            document.getElementById('protTxt').innerText = `${Math.round(logs.p)}/106g`;
-
-            document.getElementById('diaryList').innerHTML = logs.items.map(i => `<div class="food-item">${i}</div>`).join('');
-        }
+        // Initialize Settings Inputs
+        document.getElementById('setCal').value = goals.cal;
+        document.getElementById('setCarb').value = goals.c;
+        document.getElementById('setFat').value = goals.f;
+        document.getElementById('setProt').value = goals.p;
 
         updateUI();
-        searchFood(''); // Load initial list
+        searchFood('');
     </script>
 </body>
 </html>
