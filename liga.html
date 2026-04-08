@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Liga MX Hub</title>
+    <style>
+        :root { 
+            --bg: #0f172a; 
+            --card: #1e293b; 
+            --accent: #10b981; 
+            --text: #f8fafc; 
+            --grey: #94a3b8;
+            --border: #334155;
+            --red: #ef4444;
+            --gold: #fbbf24;
+        }
+        
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: var(--bg); color: var(--text); 
+            margin: 0; padding-bottom: 80px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Header --- */
+        .header { 
+            position: sticky; top: 0;
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
+            padding: 40px 20px 15px 20px; border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+        }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
+        .header h1 span { color: var(--accent); }
+
+        /* --- Views --- */
+        .view { display: none; padding: 15px; }
+        .active-view { display: block; }
+        .section-header { color: var(--grey); font-size: 14px; font-weight: 600; text-transform: uppercase; margin: 15px 0 10px 5px; }
+
+        /* --- Match Cards --- */
+        .match-card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; border: 1px solid var(--border); }
+        .status { font-size: 12px; font-weight: 600; margin-bottom: 12px; text-align: center; color: var(--grey); }
+        .status.live { color: var(--red); animation: blink 2s infinite; }
+        .teams-container { display: flex; justify-content: space-between; align-items: center; }
+        .team { display: flex; flex-direction: column; align-items: center; width: 35%; text-align: center; gap: 8px;}
+        .team-logo { font-size: 32px; background: rgba(255,255,255,0.1); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .team-name { font-size: 14px; font-weight: 600; }
+        .score-box { display: flex; align-items: center; justify-content: center; gap: 12px; width: 30%; }
+        .score { font-size: 32px; font-weight: 800; }
+        .vs { color: var(--grey); font-size: 14px; }
+
+        /* --- Standings Table --- */
+        .table-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background: #0f172a; color: var(--grey); font-weight: 600; padding: 12px 10px; font-size: 12px; text-transform: uppercase; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-weight: 500;}
+        tr:last-child td { border-bottom: none; }
+        .pos { width: 20px; text-align: center; color: var(--grey); }
+        .team-cell { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .pts { font-weight: 800; color: var(--accent); }
+
+        /* --- Top Scorers (Goleadores) --- */
+        .scorer-card { background: var(--card); border-radius: 16px; padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; border: 1px solid var(--border); }
+        .rank { font-size: 18px; font-weight: 800; color: var(--grey); width: 30px; }
+        .rank.first { color: var(--gold); }
+        .player-info { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
+        .player-name { font-size: 16px; font-weight: 700; }
+        .player-team { font-size: 12px; color: var(--grey); display: flex; align-items: center; gap: 4px; }
+        .goal-count { font-size: 24px; font-weight: 800; color: var(--accent); }
+
+        /* --- Bottom Nav --- */
+        .nav { position: fixed; bottom: 0; width: 100%; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 25px 0; border-top: 1px solid var(--border); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--grey); font-size: 11px; gap: 4px; font-weight: 600; cursor: pointer;}
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 22px; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>⚽ Liga<span>MX</span></h1>
+        <div style="background:var(--card); padding:8px 12px; border-radius:20px; font-size:12px; font-weight:bold;">Clausura '26</div>
+    </div>
+
+    <div id="matches" class="view active-view">
+        <div class="section-header">Live Now</div>
+        <div class="match-card">
+            <div class="status live">● 67'</div>
+            <div class="teams-container">
+                <div class="team"><div class="team-logo">🦅</div><span class="team-name">América</span></div>
+                <div class="score-box"><span class="score">2</span><span class="vs">-</span><span class="score">1</span></div>
+                <div class="team"><div class="team-logo">🐐</div><span class="team-name">Chivas</span></div>
+            </div>
+        </div>
+        <div class="section-header">Upcoming - Tomorrow</div>
+        <div class="match-card">
+            <div class="status">20:00 CST</div>
+            <div class="teams-container">
+                <div class="team"><div class="team-logo">🚂</div><span class="team-name">Cruz Azul</span></div>
+                <div class="score-box"><span class="vs">vs</span></div>
+                <div class="team"><div class="team-logo">🐾</div><span class="team-name">Pumas</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="standings" class="view">
+        <div class="section-header">General Table</div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr><th class="pos">#</th><th>Club</th><th title="Played">P</th><th title="Goal Difference">GD</th><th title="Points" class="pts">Pts</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="pos" style="color:var(--accent)">1</td><td><div class="team-cell">🦅 América</div></td><td>14</td><td>+18</td><td class="pts">31</td></tr>
+                    <tr><td class="pos" style="color:var(--accent)">2</td><td><div class="team-cell">⛰️ Monterrey</div></td><td>14</td><td>+15</td><td class="pts">29</td></tr>
+                    <tr><td class="pos" style="color:var(--accent)">3</td><td><div class="team-cell">🐅 Tigres</div></td><td>14</td><td>+12</td><td class="pts">27</td></tr>
+                    <tr><td class="pos" style="color:var(--accent)">4</td><td><div class="team-cell">🚂 Cruz Azul</div></td><td>14</td><td>+8</td><td class="pts">26</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="stats" class="view">
+        <div class="section-header">Goleo Individual</div>
+        
+        <div class="scorer-card">
+            <div class="rank first">1</div>
+            <div class="player-info">
+                <div class="player-name">Henry Martín</div>
+                <div class="player-team">🦅 América</div>
+            </div>
+            <div class="goal-count">9</div>
+        </div>
+
+        <div class="scorer-card">
+            <div class="rank">2</div>
+            <div class="player-info">
+                <div class="player-name">Salomón Rondón</div>
+                <div class="player-team">🐿️ Pachuca</div>
+            </div>
+            <div class="goal-count">8</div>
+        </div>
+
+        <div class="scorer-card">
+            <div class="rank">3</div>
+            <div class="player-info">
+                <div class="player-name">Diber Cambindo</div>
+                <div class="player-team">⚡ Necaxa</div>
+            </div>
+            <div class="goal-count">7</div>
+        </div>
+
+        <div class="scorer-card">
+            <div class="rank">4</div>
+            <div class="player-info">
+                <div class="player-name">André-Pierre Gignac</div>
+                <div class="player-team">🐅 Tigres</div>
+            </div>
+            <div class="goal-count">6</div>
+        </div>
+        
+        <div class="scorer-card">
+            <div class="rank">5</div>
+            <div class="player-info">
+                <div class="player-name">Uriel Antuna</div>
+                <div class="player-team">🚂 Cruz Azul</div>
+            </div>
+            <div class="goal-count">6</div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-item active" onclick="switchTab('matches', this)">
+            <span class="nav-icon">🏟️</span><span>Matches</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('standings', this)">
+            <span class="nav-icon">📊</span><span>Standings</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('stats', this)">
+            <span class="nav-icon">👟</span><span>Stats</span>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active-view');
+            el.classList.add('active');
+            window.scrollTo(0,0);
+        }
+    </script>
+</body>
+</html>
