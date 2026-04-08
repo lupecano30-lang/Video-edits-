@@ -3,115 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pulse Monitor</title>
+    <title>Musical Reminders</title>
     <style>
-        :root { --bg: #050505; --card: #121212; --neon-blue: #00f2ff; --neon-pink: #ff007f; --text: #ffffff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        :root { 
+            --ios-bg: #f2f2f7; 
+            --ios-row: #ffffff; 
+            --ios-border: #d1d1d6; 
+            --ios-blue: #007aff; 
+            --ios-red: #ff3b30;
+            --ios-grey: #8e8e93;
+        }
         
-        .header { width: 100%; padding: 40px 20px 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; }
-        .back-btn { font-size: 24px; color: var(--text); text-decoration: none; }
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: var(--ios-bg); 
+            margin: 0; 
+            color: #000; 
+            padding-bottom: 60px;
+        }
 
-        /* The Big Pulse Circle */
-        .pulse-container { position: relative; width: 280px; height: 280px; margin: 40px 0; display: flex; align-items: center; justify-content: center; }
-        .outer-ring { position: absolute; width: 100%; height: 100%; border: 2px solid #222; border-radius: 50%; }
-        .glow { position: absolute; width: 200px; height: 200px; background: radial-gradient(circle, rgba(0,242,255,0.2) 0%, transparent 70%); border-radius: 50%; animation: pulse-glow 1.5s infinite; }
+        /* Frosted Header */
+        .header { 
+            position: sticky; top: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 50px 20px 15px 20px; 
+            border-bottom: 0.5px solid var(--ios-border); 
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            z-index: 100;
+        }
+        .header h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
+        .add-btn { color: var(--ios-blue); font-size: 17px; background: none; border: none; font-weight: 500; padding: 0; cursor: pointer; }
+
+        /* List Styling */
+        .list-container { 
+            margin: 20px 16px;
+            background: var(--ios-row); 
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .row { 
+            display: flex; flex-direction: column; 
+            padding: 16px; border-bottom: 0.5px solid var(--ios-border); 
+            position: relative;
+        }
+        .row:last-child { border-bottom: none; }
         
-        .bpm-display { text-align: center; z-index: 10; }
-        .bpm-value { font-size: 80px; font-weight: 800; color: var(--neon-blue); text-shadow: 0 0 20px rgba(0,242,255,0.5); }
-        .bpm-unit { font-size: 18px; color: var(--grey); letter-spacing: 2px; }
+        .rem-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+        .rem-time { font-size: 15px; color: var(--ios-blue); margin-bottom: 8px; }
+        .rem-status { font-size: 13px; color: var(--ios-grey); }
+        .delete-btn { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--ios-red); background: none; border: none; font-size: 20px; }
 
-        /* Instructions */
-        .status-card { background: var(--card); width: 90%; border-radius: 20px; padding: 25px; box-sizing: border-box; border: 1px solid #222; text-align: center; }
-        .instruction { color: #888; font-size: 14px; line-height: 1.6; }
+        /* Modals */
+        .modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.4); z-index: 200; justify-content: center; align-items: center; 
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+        }
+        .modal-box { 
+            background: rgba(255,255,255,0.95); padding: 20px; border-radius: 14px; 
+            width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .modal-box input { 
+            width: 100%; padding: 12px; margin: 8px 0; border: 0.5px solid var(--ios-border); 
+            border-radius: 8px; font-size: 16px; box-sizing: border-box; background: #fff;
+        }
+        
+        .file-upload {
+            background: #e5e5ea; padding: 12px; border-radius: 8px; font-size: 14px; color: var(--ios-blue); margin: 8px 0;
+        }
 
-        /* Start Button */
-        .measure-btn { margin-top: auto; margin-bottom: 50px; width: 80%; background: linear-gradient(90deg, var(--neon-blue), #7000ff); padding: 18px; border-radius: 40px; border: none; color: white; font-weight: 700; font-size: 18px; box-shadow: 0 10px 20px rgba(0,242,255,0.3); }
+        .modal-btns { display: flex; border-top: 0.5px solid var(--ios-border); margin-top: 15px; padding-top: 10px;}
+        .modal-btns button { flex: 1; padding: 10px; background: none; border: none; color: var(--ios-blue); font-size: 17px; font-weight: 600;}
 
-        /* Waveform Animation */
-        .wave-box { width: 100%; height: 60px; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 4px; }
-        .bar { width: 4px; height: 10px; background: var(--neon-blue); border-radius: 2px; animation: wave 1s infinite; }
-
-        @keyframes pulse-glow { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.2; } 100% { transform: scale(0.8); opacity: 0.5; } }
-        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 40px; } }
+        /* Alarm Ringing Animation */
+        .ringing-title { color: var(--ios-red); font-size: 24px; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <a href="#" class="back-btn">✕</a>
-        <h3 style="margin:0; font-weight:400; letter-spacing:1px;">HEART RATE</h3>
-        <div style="width:24px;"></div>
+        <h1>Reminders</h1>
+        <button class="add-btn" onclick="showAddModal()">Add</button>
     </div>
 
-    <div class="pulse-container">
-        <div class="outer-ring"></div>
-        <div class="glow" id="glowAnim" style="display:none;"></div>
-        <div class="bpm-display">
-            <span class="bpm-value" id="bpmVal">--</span><br>
-            <span class="bpm-unit">BPM</span>
+    <div id="mainContent" class="list-container">
+        </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-box">
+            <h3 style="margin:0 0 10px 0;">New Reminder</h3>
+            <input type="text" id="remName" placeholder="What are you reminding?">
+            <input type="datetime-local" id="remTime">
+            
+            <div style="text-align: left; margin-top: 10px;">
+                <label style="font-size: 13px; color: var(--ios-grey);">Choose a Song (Audio File):</label>
+                <input type="file" id="remSong" accept="audio/*" class="file-upload">
+            </div>
+
+            <div class="modal-btns">
+                <button onclick="hideModal('addModal')" style="font-weight: 400;">Cancel</button>
+                <button onclick="saveReminder()">Set Alarm</button>
+            </div>
         </div>
     </div>
 
-    <div class="status-card">
-        <p class="instruction" id="statusMsg">Place your finger over the <b>back camera</b> and <b>flash</b> to start measuring.</p>
-        <div class="wave-box">
-            <div class="bar" style="animation-delay: 0.1s"></div>
-            <div class="bar" style="animation-delay: 0.2s"></div>
-            <div class="bar" style="animation-delay: 0.3s"></div>
-            <div class="bar" style="animation-delay: 0.4s"></div>
-            <div class="bar" style="animation-delay: 0.5s"></div>
+    <div id="ringModal" class="modal">
+        <div class="modal-box">
+            <h2 class="ringing-title">⏰ ALARM!</h2>
+            <h3 id="ringName" style="margin: 10px 0;">Time to wake up!</h3>
+            <button onclick="stopAlarm()" style="width: 100%; background: var(--ios-red); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 18px; font-weight: bold; margin-top: 15px;">Stop Alarm</button>
         </div>
     </div>
-
-    <button class="measure-btn" onclick="startMeasure()">START MEASURING</button>
-
-    <video id="v" style="display:none;" playsinline></video>
 
     <script>
-        let isMeasuring = false;
+        let reminders = [];
+        let activeAudio = null;
+        let songUrl = null;
 
-        async function startMeasure() {
-            if (isMeasuring) return;
-            isMeasuring = true;
-            
-            document.getElementById('statusMsg').innerHTML = "Hold steady... scanning blood flow";
-            document.getElementById('glowAnim').style.display = 'block';
-            
-            try {
-                // Request camera with Flash
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment', torch: true } 
-                });
-                
-                const video = document.getElementById('v');
-                video.srcObject = stream;
+        // Default alarm sound if they don't pick a song
+        const defaultSound = "https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg";
 
-                // Simulate pulse detection
-                let count = 0;
-                let interval = setInterval(() => {
-                    count++;
-                    // Randomize BPM between 68-75 for the demo
-                    let heartRate = Math.floor(Math.random() * (75 - 68 + 1)) + 68;
-                    document.getElementById('bpmVal').innerText = heartRate;
+        function showAddModal() { 
+            document.getElementById('addModal').style.display = 'flex'; 
+            // Set default time to right now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('remTime').value = now.toISOString().slice(0,16);
+        }
+        
+        function hideModal(id) { document.getElementById(id).style.display = 'none'; }
 
-                    if (count > 10) {
-                        clearInterval(interval);
-                        stopMeasure(stream);
-                    }
-                }, 1000);
-
-            } catch (err) {
-                alert("Please enable camera access and ensure your finger covers the lens.");
-                isMeasuring = false;
+        // Handle the file upload
+        document.getElementById('remSong').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Create a temporary URL for the audio file they picked
+                songUrl = URL.createObjectURL(file); 
             }
+        });
+
+        function saveReminder() {
+            const name = document.getElementById('remName').value;
+            const timeVal = document.getElementById('remTime').value;
+            
+            if(!name || !timeVal) return alert("Please enter a name and time!");
+
+            reminders.push({
+                id: Date.now(),
+                name: name,
+                time: new Date(timeVal).getTime(),
+                audio: songUrl || defaultSound,
+                triggered: false
+            });
+
+            // Reset inputs
+            document.getElementById('remName').value = '';
+            document.getElementById('remSong').value = '';
+            songUrl = null;
+            
+            hideModal('addModal');
+            render();
         }
 
-        function stopMeasure(stream) {
-            isMeasuring = false;
-            document.getElementById('statusMsg').innerText = "Measurement Complete.";
-            document.getElementById('glowAnim').style.display = 'none';
-            stream.getTracks().forEach(t => t.stop());
+        function deleteReminder(id) {
+            reminders = reminders.filter(r => r.id !== id);
+            render();
         }
+
+        function render() {
+            const container = document.getElementById('mainContent');
+            container.innerHTML = '';
+            
+            if(reminders.length === 0) {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:gray;">No reminders set.</div>';
+                return;
+            }
+
+            reminders.sort((a,b) => a.time - b.time).forEach(rem => {
+                const dateObj = new Date(rem.time);
+                const timeString = dateObj.toLocaleDateString() + " at " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                let status = rem.triggered ? "Passed" : "Waiting...";
+                let color = rem.triggered ? "var(--ios-grey)" : "var(--ios-blue)";
+
+                container.innerHTML += `
+                    <div class="row" style="opacity: ${rem.triggered ? '0.6' : '1'}">
+                        <div class="rem-title">${rem.name}</div>
+                        <div class="rem-time" style="color: ${color}">${timeString}</div>
+                        <div class="rem-status">${status}</div>
+                        <button class="delete-btn" onclick="deleteReminder(${rem.id})">🗑️</button>
+                    </div>
+                `;
+            });
+        }
+
+        // --- THE ALARM ENGINE ---
+        // This checks the time every 1 second
+        setInterval(() => {
+            const now = Date.now();
+            reminders.forEach(rem => {
+                // If it's time, and we haven't triggered it yet
+                if (now >= rem.time && !rem.triggered) {
+                    triggerAlarm(rem);
+                }
+            });
+        }, 1000);
+
+        function triggerAlarm(rem) {
+            rem.triggered = true;
+            render(); // Update UI to say "Passed"
+
+            // Play the song
+            activeAudio = new Audio(rem.audio);
+            activeAudio.loop = true; // Keep playing until they hit stop
+            activeAudio.play().catch(e => console.log("Browser blocked autoplay. User needs to interact first."));
+
+            // Show the popup
+            document.getElementById('ringName').innerText = rem.name;
+            document.getElementById('ringModal').style.display = 'flex';
+        }
+
+        function stopAlarm() {
+            if(activeAudio) {
+                activeAudio.pause();
+                activeAudio.currentTime = 0;
+            }
+            hideModal('ringModal');
+        }
+
+        render();
     </script>
 </body>
 </html>
