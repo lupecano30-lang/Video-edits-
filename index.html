@@ -2,92 +2,130 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clip Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fitness Pro</title>
     <style>
-        :root { --ios-blue: #007aff; --dark-bg: #121212; }
-        body { font-family: -apple-system, sans-serif; background: var(--dark-bg); color: white; margin: 0; padding: 20px; }
+        :root { --bg: #0b0e14; --card: #1c222d; --blue: #4facfe; --text: #ffffff; --grey: #8e8e93; --green: #34c759; --red: #ff3b30; --orange: #ffcc00; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; padding-bottom: 100px; }
         
-        /* The Video Container (9:16 Aspect Ratio) */
-        .preview-window { 
-            width: 100%; 
-            max-width: 350px; 
-            aspect-ratio: 9/16; 
-            background: #000; 
-            margin: 0 auto 20px auto; 
-            border-radius: 20px; 
-            position: relative; 
-            overflow: hidden;
-            border: 2px solid #333;
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .main-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* Calorie Ring Area */
+        .cal-display { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .cal-num { font-size: 36px; font-weight: 800; display: block; }
+        .label { color: var(--grey); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Main Gameplay */
-        #gameplay { width: 100%; height: 100%; object-fit: cover; }
+        /* Macro Progress */
+        .macros { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .bar-bg { background: #2d3446; height: 6px; border-radius: 3px; margin: 8px 0; overflow: hidden; }
+        .bar-fill { height: 100%; transition: width 0.5s ease; }
 
-        /* Face Cam Overlay */
-        #facecam { 
-            position: absolute; 
-            top: 20px; 
-            left: 20px; 
-            width: 40%; 
-            border-radius: 12px; 
-            border: 2px solid white; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
-        }
-
-        /* Social/Text Overlays */
-        .overlay-text { 
-            position: absolute; 
-            bottom: 80px; 
-            width: 100%; 
-            text-align: center; 
-            font-weight: 900; 
-            font-size: 24px; 
-            text-transform: uppercase;
-            text-shadow: 2px 2px #000;
-        }
-
-        /* Controls */
-        .btn-group { display: flex; flex-direction: column; gap: 10px; max-width: 350px; margin: 0 auto; }
-        .upload-btn { background: #1c1c1e; padding: 15px; border-radius: 12px; border: 1px solid #333; cursor: pointer; text-align: left; }
-        .export-btn { background: var(--ios-blue); padding: 18px; border-radius: 12px; border: none; color: white; font-weight: bold; margin-top: 10px; }
-        input[type="file"] { display: none; }
+        /* Search UI */
+        #searchView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 100; padding: 20px; box-sizing: border-box; }
+        .search-bar { background: var(--card); border: none; padding: 15px; border-radius: 12px; width: 100%; color: white; font-size: 16px; margin-bottom: 20px; outline: none; }
+        .food-item { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Footer */
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #161b2a; display: flex; justify-content: space-around; padding: 15px 0 35px 0; border-top: 0.5px solid #2d3446; }
+        .add-btn { background: var(--blue); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-top: -40px; border: 6px solid var(--bg); cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h2 style="text-align:center;">Clip Maker</h2>
+    <div id="mainView">
+        <div class="header"><h1>Today ▾</h1><div style="width:35px; height:35px; background:var(--grey); border-radius:50%;"></div></div>
 
-    <div class="preview-window">
-        <video id="gameplay" autoplay loop muted></video>
-        <video id="facecam" autoplay loop muted></video>
-        <div class="overlay-text">The Mythic Harpoon!</div>
+        <div class="main-card">
+            <div class="cal-display">
+                <div><span class="label">Eaten</span><span class="cal-num" id="eaten">0</span></div>
+                <div style="text-align:center;"><span class="label">Goal</span><span class="cal-num" style="color:var(--grey)">2130</span></div>
+                <div style="text-align:right;"><span class="label">Left</span><span class="cal-num" id="left" style="color:var(--blue)">2130</span></div>
+            </div>
+            
+            <div class="macros">
+                <div><span class="label">Carbs</span><div class="bar-bg"><div id="carbFill" class="bar-fill" style="width:0%; background:var(--orange)"></div></div><small id="carbTxt">0/266g</small></div>
+                <div><span class="label">Fat</span><div class="bar-bg"><div id="fatFill" class="bar-fill" style="width:0%; background:var(--red)"></div></div><small id="fatTxt">0/71g</small></div>
+                <div><span class="label">Protein</span><div class="bar-bg"><div id="protFill" class="bar-fill" style="width:0%; background:var(--green)"></div></div><small id="protTxt">0/106g</small></div>
+            </div>
+        </div>
+
+        <h3 style="margin-top:30px">Diary</h3>
+        <div id="diaryList"></div>
     </div>
 
-    <div class="btn-group">
-        <label class="upload-btn">
-            🎮 Upload Gameplay
-            <input type="file" accept="video/*" onchange="loadVideo(event, 'gameplay')">
-        </label>
-        
-        <label class="upload-btn">
-            👤 Upload Face Cam
-            <input type="file" accept="video/*" onchange="loadVideo(event, 'facecam')">
-        </label>
+    <div id="searchView">
+        <button onclick="closeSearch()" style="background:none; border:none; color:var(--blue); margin-bottom:10px;">✕ Close</button>
+        <input type="text" class="search-bar" placeholder="Search food..." oninput="searchFood(this.value)">
+        <div id="searchResults"></div>
+    </div>
 
-        <button class="export-btn" onclick="exportVideo()">Export for TikTok</button>
+    <div class="nav">
+        <span>🏠</span><span>📅</span>
+        <div class="add-btn" onclick="openSearch()">+</div>
+        <span>📊</span><span>⋯</span>
     </div>
 
     <script>
-        function loadVideo(event, type) {
-            const file = event.target.files[0];
-            const url = URL.createObjectURL(file);
-            document.getElementById(type).src = url;
+        // 1. DATABASE: The "Pictures" data
+        const foodDb = [
+            { name: "Coffee, black", cal: 2, c: 0, f: 0, p: 0.3 },
+            { name: "Protein Shake", cal: 150, c: 5, f: 3, p: 30 },
+            { name: "Olive Oil (1tbsp)", cal: 126, c: 0, f: 14, p: 0 },
+            { name: "Strawberry (0.5 cup)", cal: 24, c: 6, f: 0, p: 0.5 },
+            { name: "Bacon (2 pieces)", cal: 77, c: 0, f: 6, p: 5 },
+            { name: "Blueberries (1 cup)", cal: 84, c: 21, f: 0.5, p: 1 },
+            { name: "Peanut Butter (1tbsp)", cal: 94, c: 3, f: 8, p: 4 }
+        ];
+
+        let logs = JSON.parse(localStorage.getItem('fitLogs')) || { eaten: 0, c: 0, f: 0, p: 0, items: [] };
+
+        function openSearch() { document.getElementById('searchView').style.display = 'block'; }
+        function closeSearch() { document.getElementById('searchView').style.display = 'none'; }
+
+        function searchFood(query) {
+            const results = foodDb.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
+            const container = document.getElementById('searchResults');
+            container.innerHTML = results.map(f => `
+                <div class="food-item">
+                    <div><strong>${f.name}</strong><br><small>${f.cal} cal</small></div>
+                    <button onclick="logFood('${f.name}', ${f.cal}, ${f.c}, ${f.f}, ${f.p})" style="background:var(--blue); border:none; color:white; border-radius:50%; width:30px; height:30px;">+</button>
+                </div>
+            `).join('');
         }
 
-        function exportVideo() {
-            alert("Design Ready! To merge these into one file, we would need to add the FFmpeg.wasm processing library.");
+        function logFood(name, cal, c, f, p) {
+            logs.eaten += cal;
+            logs.c += c; logs.f += f; logs.p += p;
+            logs.items.push(name);
+            save();
+            closeSearch();
         }
+
+        function save() {
+            localStorage.setItem('fitLogs', JSON.stringify(logs));
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('eaten').innerText = Math.round(logs.eaten);
+            document.getElementById('left').innerText = Math.max(0, 2130 - Math.round(logs.eaten));
+            
+            // Update Bars
+            document.getElementById('carbFill').style.width = (logs.c / 266 * 100) + "%";
+            document.getElementById('fatFill').style.width = (logs.f / 71 * 100) + "%";
+            document.getElementById('protFill').style.width = (logs.p / 106 * 100) + "%";
+            
+            // Update Text
+            document.getElementById('carbTxt').innerText = `${Math.round(logs.c)}/266g`;
+            document.getElementById('fatTxt').innerText = `${Math.round(logs.f)}/71g`;
+            document.getElementById('protTxt').innerText = `${Math.round(logs.p)}/106g`;
+
+            document.getElementById('diaryList').innerHTML = logs.items.map(i => `<div class="food-item">${i}</div>`).join('');
+        }
+
+        updateUI();
+        searchFood(''); // Load initial list
     </script>
 </body>
 </html>
