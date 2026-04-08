@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clip Studio</title>
+    <style>
+        :root { --ios-blue: #007aff; --dark-bg: #121212; }
+        body { font-family: -apple-system, sans-serif; background: var(--dark-bg); color: white; margin: 0; padding: 20px; }
+        
+        /* The Video Container (9:16 Aspect Ratio) */
+        .preview-window { 
+            width: 100%; 
+            max-width: 350px; 
+            aspect-ratio: 9/16; 
+            background: #000; 
+            margin: 0 auto 20px auto; 
+            border-radius: 20px; 
+            position: relative; 
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+
+        /* Main Gameplay */
+        #gameplay { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Face Cam Overlay */
+        #facecam { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            width: 40%; 
+            border-radius: 12px; 
+            border: 2px solid white; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+        }
+
+        /* Social/Text Overlays */
+        .overlay-text { 
+            position: absolute; 
+            bottom: 80px; 
+            width: 100%; 
+            text-align: center; 
+            font-weight: 900; 
+            font-size: 24px; 
+            text-transform: uppercase;
+            text-shadow: 2px 2px #000;
+        }
+
+        /* Controls */
+        .btn-group { display: flex; flex-direction: column; gap: 10px; max-width: 350px; margin: 0 auto; }
+        .upload-btn { background: #1c1c1e; padding: 15px; border-radius: 12px; border: 1px solid #333; cursor: pointer; text-align: left; }
+        .export-btn { background: var(--ios-blue); padding: 18px; border-radius: 12px; border: none; color: white; font-weight: bold; margin-top: 10px; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align:center;">Clip Maker</h2>
+
+    <div class="preview-window">
+        <video id="gameplay" autoplay loop muted></video>
+        <video id="facecam" autoplay loop muted></video>
+        <div class="overlay-text">The Mythic Harpoon!</div>
+    </div>
+
+    <div class="btn-group">
+        <label class="upload-btn">
+            🎮 Upload Gameplay
+            <input type="file" accept="video/*" onchange="loadVideo(event, 'gameplay')">
+        </label>
+        
+        <label class="upload-btn">
+            👤 Upload Face Cam
+            <input type="file" accept="video/*" onchange="loadVideo(event, 'facecam')">
+        </label>
+
+        <button class="export-btn" onclick="exportVideo()">Export for TikTok</button>
+    </div>
+
+    <script>
+        function loadVideo(event, type) {
+            const file = event.target.files[0];
+            const url = URL.createObjectURL(file);
+            document.getElementById(type).src = url;
+        }
+
+        function exportVideo() {
+            alert("Design Ready! To merge these into one file, we would need to add the FFmpeg.wasm processing library.");
+        }
+    </script>
+</body>
+</html>
