@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlkalineMaster | pH Balance</title>
+    <style>
+        :root { --alkaline-green: #2d6a4f; --sea-blue: #118ab2; --bg: #fdfcfb; --dark: #1b4332; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); margin: 0; padding-bottom: 90px; }
+        
+        .header { padding: 25px 20px; background: white; border-bottom: 1px solid #e9ecef; position: sticky; top: 0; z-index: 100; }
+        .search-bar { width: 100%; padding: 14px; border-radius: 15px; border: 1px solid #dee2e6; box-sizing: border-box; font-size: 16px; margin-top: 10px; outline: none; }
+
+        .recipe-list { padding: 20px; }
+        .recipe-item { display: flex; align-items: center; gap: 15px; background: white; padding: 18px; border-radius: 20px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer; border: 1px solid #f1f3f5; }
+        .recipe-icon { width: 50px; height: 50px; background: #ebf5ee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
+        #recipeOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: flex-end; }
+        .overlay-content { background: white; width: 100%; max-height: 92vh; border-radius: 30px 30px 0 0; padding: 30px; box-sizing: border-box; overflow-y: auto; }
+        
+        .btn-action { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--alkaline-green); color: white; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
+        
+        .measurement-list { list-style: none; padding: 0; margin: 15px 0; }
+        .measurement-list li { padding: 10px 0; border-bottom: 1px solid #f1f3f5; font-weight: 500; display: flex; align-items: center; }
+        .measurement-list li::before { content: "🌿"; margin-right: 10px; font-size: 12px; }
+
+        .instruction-step { margin-bottom: 15px; padding-left: 15px; border-left: 3px solid var(--sea-blue); font-size: 14px; color: #495057; line-height: 1.6; }
+
+        .image-box { width: 100%; height: 300px; background: #f1f3f5; border-radius: 20px; margin: 20px 0; overflow: hidden; }
+        .recipe-img { width: 100%; height: 100%; object-fit: cover; }
+
+        .nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: white; display: flex; border-top: 1px solid #dee2e6; }
+        .nav-item { flex: 1; text-align: center; padding-top: 15px; font-size: 11px; color: #adb5bd; cursor: pointer; }
+        .nav-item.active { color: var(--alkaline-green); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2 style="margin:0; color: var(--alkaline-green);">Alkaline Library</h2>
+        <p style="margin:5px 0; font-size:14px; color:#6c757d">Plant-Based • pH Balancing • Electric Foods</p>
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search (Chickpeas, Quinoa, Kale...)" onkeyup="filterRecipes()">
+    </div>
+
+    <div class="recipe-list" id="recipeContainer"></div>
+
+    <div id="recipeOverlay" onclick="closeRecipe()">
+        <div class="overlay-content" onclick="event.stopPropagation()">
+            <div id="r-icon" style="font-size: 45px; margin-bottom: 10px;"></div>
+            <h2 id="r-title" style="margin:0"></h2>
+            
+            <h3 style="margin-top:25px">Ingredients & Measurements</h3>
+            <ul id="r-ingredients" class="measurement-list"></ul>
+            
+            <h3>Preparation Guide</h3>
+            <div id="r-steps"></div>
+
+            <div class="image-box">
+                <img id="r-img" class="recipe-img" src="" alt="Alkaline Meal Visual">
+            </div>
+
+            <button class="btn-action" onclick="alert('Added to Shopping List!')">+ Add to Shopping List</button>
+            <button onclick="closeRecipe()" style="width:100%; padding:15px; background:none; border:none; color:#adb5bd; font-weight: 600;">Back to Library</button>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-item active">🌿<br>Recipes</div>
+        <div class="nav-item">🛒<br>Shop</div>
+        <div class="nav-item">⚖️<br>pH Level</div>
+    </div>
+
+<script>
+    const styles = ["Savory", "Key Lime", "Curried", "Herbal", "Roasted"];
+    const proteins = [
+        { name: "Chickpeas (Garbanzo)", icon: "🥣", qty: "1.5 cups (soaked)", step: "Boil until tender, then sauté in avocado oil with sea salt." },
+        { name: "Walnut Meat", icon: "🥜", qty: "1 cup (crushed)", step: "Pulse walnuts in a blender and season with onion powder and cayenne." },
+        { name: "Hemp Seeds", icon: "✨", qty: "4 tbsp", step: "Sprinkle over the greens raw to preserve the essential oils." }
+    ];
+    const bases = [
+        { name: "Quinoa", qty: "1 cup (uncooked)", step: "Rinse thoroughly and simmer in 2 cups of spring water for 15 mins." },
+        { name: "Wild Rice", qty: "1 cup", step: "Cook in spring water until the grains burst and soften (approx 45 mins)." },
+        { name: "Kale & Spinach", qty: "3 cups", step: "Steam lightly or massage with key lime and avocado oil." },
+        { name: "Zucchini Noodles", qty: "2 cups", step: "Flash sauté for 2 minutes to keep them 'electric' and crunchy." }
+    ];
+
+    let allRecipes = [];
+
+    function generate() {
+        let id = 0;
+        styles.forEach(s => proteins.forEach(p => bases.forEach(b => {
+            allRecipes.push({
+                id: id++,
+                title: `${s} ${p.name} Bowl`,
+                icon: p.icon,
+                img: `https://loremflickr.com/600/600/vegetable,grain,bowl/all?random=${id}`,
+                ing: [
+                    p.qty + " " + p.name,
+                    b.qty + " " + b.name,
+                    "2 tbsp Cold Pressed Avocado Oil",
+                    "1 tsp Onion Powder",
+                    "1/2 tsp Sea Salt",
+                    "Dash of Cayenne Pepper",
+                    "1 Key Lime (juiced)"
+                ],
+                steps: [
+                    b.step,
+                    p.step,
+                    "Combine the ingredients in a wooden or glass bowl.",
+                    "Drizzle with avocado oil and fresh key lime juice to enhance mineral absorption."
+                ]
+            });
+        })));
+        renderRecipes(allRecipes);
+    }
+
+    function renderRecipes(list) {
+        document.getElementById('recipeContainer').innerHTML = list.map(r => `
+            <div class="recipe-item" onclick="openRecipe(${r.id})">
+                <div class="recipe-icon">${r.icon}</div>
+                <div><b>${r.title}</b><br><small style="color:var(--alkaline-green)">pH Balanced Meal</small></div>
+            </div>`).join('');
+    }
+
+    function openRecipe(id) {
+        const r = allRecipes.find(item => item.id === id);
+        document.getElementById('r-title').innerText = r.title;
+        document.getElementById('r-icon').innerText = r.icon;
+        document.getElementById('r-ingredients').innerHTML = r.ing.map(i => `<li>${i}</li>`).join('');
+        document.getElementById('r-steps').innerHTML = r.steps.map(s => `<div class="instruction-step">${s}</div>`).join('');
+        document.getElementById('r-img').src = r.img;
+        document.getElementById('recipeOverlay').style.display = 'flex';
+    }
+
+    function closeRecipe() { document.getElementById('recipeOverlay').style.display = 'none'; }
+    
+    function filterRecipes() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        renderRecipes(allRecipes.filter(r => r.title.toLowerCase().includes(term)));
+    }
+
+    generate();
+</script>
+</body>
+</html>
